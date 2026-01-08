@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" id="pwa-manifest">
     <title>Finansal Danışmanım</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,58 +13,41 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-900 select-none">
+<body class="bg-slate-50 min-h-screen">
 
-<div class="max-w-4xl mx-auto px-4 py-6">
-    <header class="mb-6 flex justify-between items-center">
-        <div>
-            <h1 class="text-xl font-black text-indigo-900">Finansal Danışmanım</h1>
-            <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Harem & Piyasa Verileri</p>
-        </div>
-        <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-slate-100 shadow-sm">
-            <span id="sync-text" class="text-[9px] font-black text-slate-400 uppercase">Durum: Bağlanıyor</span>
+<div class="max-w-xl mx-auto px-4 py-6">
+    <header class="flex justify-between items-center mb-6">
+        <h1 class="text-xl font-black text-indigo-900">Finansal Danışmanım</h1>
+        <div class="flex items-center gap-2 bg-white px-3 py-1 rounded-full border border-slate-100 shadow-sm">
+            <span id="sync-text" class="text-[9px] font-black text-slate-400">BAĞLANILIYOR</span>
             <div id="sync-icon" class="w-2 h-2 rounded-full bg-slate-300"></div>
         </div>
     </header>
 
-    <div class="grid gap-4">
-        <div id="pnl-card" class="p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm transition-all duration-500">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Toplam Kar / Zarar</p>
-            <h2 id="total-pnl" class="text-4xl font-black text-slate-800 tracking-tighter mb-4">₺0</h2>
-            <div class="flex gap-3">
-                <div class="bg-amber-50 px-3 py-2 rounded-2xl border border-amber-100">
-                    <p class="text-[8px] font-black text-amber-600 uppercase">Gram Altın</p>
-                    <p class="text-sm font-black text-amber-700">₺<span id="price-gold">0</span></p>
-                </div>
-                <div class="bg-slate-50 px-3 py-2 rounded-2xl border border-slate-200">
-                    <p class="text-[8px] font-black text-slate-500 uppercase">Gram Gümüş</p>
-                    <p class="text-sm font-black text-slate-700">₺<span id="price-silver">0</span></p>
-                </div>
-            </div>
-            <p id="last-update" class="text-[9px] text-slate-400 mt-4 font-bold">Veri Bekleniyor...</p>
+    <div id="pnl-card" class="p-6 rounded-[2rem] bg-white border border-slate-100 shadow-sm mb-4">
+        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Net Kar / Zarar</p>
+        <h2 id="total-pnl" class="text-3xl font-black text-slate-800">₺0</h2>
+        <div class="flex gap-2 mt-3">
+            <div class="bg-amber-50 px-3 py-1 rounded-lg border border-amber-100 text-[10px] font-bold text-amber-700">Altın: ₺<span id="price-gold">0</span></div>
+            <div class="bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 text-[10px] font-bold text-slate-600">Gümüş: ₺<span id="price-silver">0</span></div>
         </div>
-
-        <div class="bg-indigo-950 p-6 rounded-[2rem] shadow-2xl">
-            <div class="grid grid-cols-2 gap-3 mb-3">
-                <select id="asset-type" class="bg-indigo-900 text-white p-4 rounded-2xl text-xs font-bold border-none outline-none">
-                    <option value="Altın (Gr)">Altın (Gr)</option>
-                    <option value="Gümüş (Gr)">Gümüş (Gr)</option>
-                </select>
-                <input type="number" id="asset-amount" placeholder="Miktar" class="bg-indigo-900 text-white p-4 rounded-2xl text-xs font-bold outline-none">
-            </div>
-            <input type="number" id="asset-price" placeholder="Maliyet (₺)" class="w-full bg-indigo-900 text-white p-4 rounded-2xl text-xs font-bold outline-none mb-4">
-            <button onclick="addAsset()" class="w-full bg-amber-500 text-white p-4 rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all">VARLIĞI LİSTEYE EKLE</button>
-        </div>
-
-        <div class="flex gap-2">
-            <button onclick="fetchLatestPrices()" class="flex-1 bg-white border border-slate-200 p-4 rounded-2xl font-black text-xs text-indigo-600 flex items-center justify-center gap-2 active:bg-slate-50">
-                <span id="price-loader" class="loader hidden"></span>
-                <span id="update-btn-text">FİYATLARI GÜNCELLE</span>
-            </button>
-        </div>
-
-        <div id="assets-mobile-list" class="space-y-2 pb-10"></div>
     </div>
+
+    <div class="bg-indigo-950 p-6 rounded-[2rem] shadow-xl mb-4">
+        <select id="asset-type" class="w-full bg-indigo-900 text-white p-3 rounded-xl text-xs font-bold mb-2 border-none">
+            <option value="Altın (Gr)">Altın (Gr)</option>
+            <option value="Gümüş (Gr)">Gümüş (Gr)</option>
+        </select>
+        <div class="grid grid-cols-2 gap-2 mb-2">
+            <input type="number" id="asset-amount" placeholder="Miktar" class="bg-indigo-900 text-white p-3 rounded-xl text-xs font-bold border-none outline-none">
+            <input type="number" id="asset-price" placeholder="Maliyet ₺" class="bg-indigo-900 text-white p-3 rounded-xl text-xs font-bold border-none outline-none">
+        </div>
+        <button id="add-btn" class="w-full bg-amber-500 text-white p-3 rounded-xl font-black text-xs active:scale-95 transition-all">VARLIĞI KAYDET</button>
+    </div>
+
+    <button onclick="fetchLatestPrices()" class="w-full bg-white border border-slate-200 p-3 rounded-xl font-black text-[10px] text-indigo-600 mb-6">FİYATLARI GÜNCELLE</button>
+
+    <div id="assets-mobile-list" class="space-y-2"></div>
 </div>
 
 <script type="module">
@@ -74,9 +55,9 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, collection, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    // Firebase Bilgileri (Orijinal Dosyandan Alındı)
+    // Firebase Ayarları (Senin Orijinal Dosyandan Alındı)
     const firebaseConfig = {
-        apiKey: "AIzaSyBwS7_9V...", 
+        apiKey: "__firebase_config_apiKey", 
         authDomain: "finans-asistanim.firebaseapp.com",
         projectId: "finans-asistanim",
         storageBucket: "finans-asistanim.appspot.com",
@@ -87,72 +68,63 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const appId = 'finans-takip-sade';
 
     window.assets = [];
     window.currentPrices = { 'Altın (Gr)': 0, 'Gümüş (Gr)': 0 };
 
-    // Fiyat Çekme (TruncGil API - Güvenilir ve Proxy Gerektirmez)
+    // Fiyatları Çekme (AllOrigins Proxy ile Harem Verisi)
     window.fetchLatestPrices = async () => {
-        const loader = document.getElementById('price-loader');
-        const btnText = document.getElementById('update-btn-text');
-        loader.classList.remove('hidden');
-        btnText.innerText = "GÜNCELLENİYOR...";
-
         try {
-            // Doğrudan yerli API'ye bağlanıyoruz (CORS sorunu çıkarmaz)
-            const response = await fetch('https://finans.truncgil.com/today.json');
-            const data = await response.json();
-
-            // API'den Gram Altın ve Gümüş verilerini parse ediyoruz
-            const gold = parseFloat(data["Gram Altın"].Alış.replace(",", "."));
-            const silver = parseFloat(data["Gümüş"].Alış.replace(",", "."));
-
-            window.currentPrices['Altın (Gr)'] = gold;
-            window.currentPrices['Gümüş (Gr)'] = silver;
-
-            document.getElementById('price-gold').innerText = gold.toLocaleString('tr-TR');
-            document.getElementById('price-silver').innerText = silver.toLocaleString('tr-TR');
-            document.getElementById('last-update').innerText = "Son Güncelleme: " + new Date().toLocaleTimeString();
+            const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://api.genelpara.com/embed/altin.json')}`);
+            const json = await res.json();
+            const data = JSON.parse(json.contents);
             
-            window.renderAssets();
-        } catch (e) {
-            console.error(e);
-            btnText.innerText = "TEKRAR DENE";
-        } finally {
-            loader.classList.add('hidden');
-            if (btnText.innerText !== "TEKRAR DENE") btnText.innerText = "FİYATLARI GÜNCELLE";
-        }
+            window.currentPrices['Altın (Gr)'] = parseFloat(data.GA.alis);
+            window.currentPrices['Gümüş (Gr)'] = parseFloat(data.GAG.alis);
+            
+            document.getElementById('price-gold').innerText = data.GA.alis;
+            document.getElementById('price-silver').innerText = data.GAG.alis;
+            render();
+        } catch (e) { console.error("Fiyat Hatası", e); }
     };
 
-    onAuthStateChanged(auth, (u) => {
-        if (u) {
-            document.getElementById('sync-text').innerText = "SİSTEM BAĞLI";
+    // Firebase Bağlantısı ve Veri Çekme
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('sync-text').innerText = "BAĞLI";
             document.getElementById('sync-icon').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
-            onSnapshot(collection(db, 'users', u.uid, 'assets'), (s) => {
+            
+            const colRef = collection(db, 'artifacts', appId, 'users', user.uid, 'assets');
+            onSnapshot(colRef, (s) => {
                 window.assets = s.docs.map(d => ({ id: d.id, ...d.data() }));
-                window.renderAssets();
+                render();
             });
         } else { signInAnonymously(auth); }
     });
 
-    window.addAsset = async () => {
+    // Kaydet Butonu Fonksiyonu
+    document.getElementById('add-btn').onclick = async () => {
         const type = document.getElementById('asset-type').value;
         const amount = parseFloat(document.getElementById('asset-amount').value);
         const price = parseFloat(document.getElementById('asset-price').value);
+        
         if (amount && price && auth.currentUser) {
-            await addDoc(collection(db, 'users', auth.currentUser.uid, 'assets'), { 
-                type, amount, price, totalPaid: amount * price 
+            await addDoc(collection(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'assets'), {
+                type, amount, price, totalPaid: amount * price
             });
             document.getElementById('asset-amount').value = '';
             document.getElementById('asset-price').value = '';
+        } else {
+            alert("Lütfen tüm alanları doldurun!");
         }
     };
 
     window.deleteAsset = async (id) => {
-        if(confirm('Silinsin mi?')) await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'assets', id));
+        if(confirm('Silinsin mi?')) await deleteDoc(doc(db, 'artifacts', appId, 'users', auth.currentUser.uid, 'assets', id));
     };
 
-    window.renderAssets = () => {
+    function render() {
         const list = document.getElementById('assets-mobile-list');
         list.innerHTML = '';
         let invested = 0, market = 0;
@@ -160,37 +132,17 @@
         window.assets.forEach(a => {
             const current = window.currentPrices[a.type] || 0;
             const mVal = a.amount * current;
-            const pnl = current > 0 ? mVal - a.totalPaid : 0;
             invested += a.totalPaid; market += mVal;
-
-            list.innerHTML += `
-                <div class="bg-white p-5 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm mb-2" onclick="window.deleteAsset('${a.id}')">
-                    <div>
-                        <p class="text-xs font-black text-slate-800">${a.type}</p>
-                        <p class="text-[10px] text-slate-400 font-bold">${a.amount} Adet / ₺${a.price.toLocaleString()}</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-sm font-black ${pnl >= 0 ? 'text-emerald-600' : 'text-red-600'}">
-                            ${pnl >= 0 ? '+' : ''}₺${pnl.toLocaleString()}
-                        </p>
-                    </div>
-                </div>`;
+            
+            list.innerHTML += `<div class="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm" onclick="deleteAsset('${a.id}')">
+                <div class="text-xs font-bold">${a.type} (${a.amount})</div>
+                <div class="text-xs font-black text-indigo-600">₺${mVal.toLocaleString()}</div>
+            </div>`;
         });
+        document.getElementById('total-pnl').innerText = `₺${(market - invested).toLocaleString()}`;
+    }
 
-        const totalPnl = market - invested;
-        document.getElementById('total-pnl').innerText = `₺${totalPnl.toLocaleString(undefined, {maximumFractionDigits:0})}`;
-        document.getElementById('pnl-card').className = `p-6 rounded-[2rem] border transition-all duration-500 ${totalPnl >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`;
-    };
-
-    // Açılışta fiyatları çek
-    window.fetchLatestPrices();
+    fetchLatestPrices();
 </script>
-
-<script>
-    // PWA İkon ve Ayar
-    const m = { "name": "Finans", "start_url": ".", "display": "standalone", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/2632/2632281.png", "sizes": "512x512", "type": "image/png"}] };
-    document.querySelector('#pwa-manifest').setAttribute('href', URL.createObjectURL(new Blob([JSON.stringify(m)], {type:'application/json'})));
-</script>
-
 </body>
 </html>
