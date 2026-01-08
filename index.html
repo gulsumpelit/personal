@@ -6,7 +6,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="FinansAsistan">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2632/2632281.png">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2632/2632281.png">
     <link rel="manifest" id="pwa-manifest">
     <title>Finansal Danışmanım</title>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,16 +17,18 @@
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .loader { border: 2px solid #f3f3f3; border-top: 2px solid #4f46e5; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { display: none; }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen text-slate-900">
+<body class="bg-slate-50 min-h-screen text-slate-900 select-none">
 
 <div class="max-w-6xl mx-auto px-4 py-6 pb-24">
     <header class="mb-6 flex flex-col gap-2">
         <div class="flex justify-between items-start">
             <div>
                 <h1 class="text-2xl font-bold text-indigo-900">Finansal Danışmanım</h1>
-                <p class="text-slate-500 text-[10px]">Harem Altın & Gümüş Takibi</p>
+                <p class="text-slate-500 text-[10px]">Harem Altın Anlık Veri</p>
             </div>
             <div id="sync-status" class="flex items-center gap-1 text-[9px] font-black bg-white px-2 py-1 rounded-full border border-slate-100 shadow-sm">
                 <span id="sync-text">Bağlanıyor</span>
@@ -42,25 +46,26 @@
     </header>
 
     <div id="assets-section" class="space-y-4">
-        <div class="p-5 rounded-3xl bg-white shadow-sm border border-slate-100">
-            <p class="text-[9px] font-black text-slate-400 uppercase">Net Kar / Zarar</p>
-            <h2 id="total-pnl" class="text-3xl font-black text-slate-800">₺0</h2>
+        <div id="pnl-card" class="p-5 rounded-3xl bg-white shadow-sm border border-slate-100">
+            <p class="text-[9px] font-black text-slate-400 uppercase">Toplam Kar / Zarar</p>
+            <h2 id="total-pnl" class="text-3xl font-black text-slate-800 tracking-tighter">₺0</h2>
             <div class="mt-3 flex gap-2">
                 <span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">Altın: ₺<span id="price-gold">0</span></span>
                 <span class="text-[9px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">Gümüş: ₺<span id="price-silver">0</span></span>
             </div>
+            <p id="last-update" class="text-[8px] text-slate-400 mt-2 uppercase font-bold">Son Güncelleme: ---</p>
         </div>
 
-        <div class="bg-indigo-950 p-5 rounded-3xl shadow-xl">
+        <div class="bg-indigo-950 p-5 rounded-3xl shadow-xl border border-indigo-900">
             <div class="grid grid-cols-2 gap-3 mb-3">
-                <select id="asset-type" class="p-3 bg-indigo-900 text-white rounded-xl text-xs outline-none">
+                <select id="asset-type" class="p-3.5 bg-indigo-900/40 text-white rounded-2xl text-xs font-bold outline-none border border-indigo-800">
                     <option value="Altın (Gr)">Altın (Gr)</option>
                     <option value="Gümüş (Gr)">Gümüş (Gr)</option>
                 </select>
-                <input type="number" id="asset-amount" placeholder="Miktar" class="p-3 bg-indigo-900 text-white rounded-xl text-xs outline-none">
+                <input type="number" id="asset-amount" placeholder="Miktar" class="p-3.5 bg-indigo-900/40 text-white rounded-2xl text-xs font-bold outline-none border border-indigo-800">
             </div>
-            <input type="number" id="asset-price" placeholder="Maliyet (₺)" class="w-full p-3 bg-indigo-900 text-white rounded-xl text-xs outline-none mb-3">
-            <button onclick="addAsset()" class="w-full bg-amber-500 text-white p-3 rounded-xl font-black text-xs">VARLIK EKLE</button>
+            <input type="number" id="asset-price" placeholder="Maliyet (₺)" class="w-full p-3.5 bg-indigo-900/40 text-white rounded-2xl text-xs font-bold outline-none border border-indigo-800 mb-3">
+            <button onclick="addAsset()" class="w-full bg-amber-500 text-white p-3.5 rounded-2xl font-black text-xs shadow-lg active:scale-95 transition">VARLIĞI KAYDET</button>
         </div>
 
         <div id="assets-mobile-list" class="space-y-2"></div>
@@ -72,9 +77,9 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
     import { getFirestore, doc, onSnapshot, collection, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    // Senin orijinal dosyandaki Firebase bilgilerin:
+    // Orijinal dosyanızdaki Firebase bilgileriniz
     const firebaseConfig = {
-        apiKey: "AIzaSyBwS7_9V...", // Burası senin orijinal dosyanla aynı kalmalı
+        apiKey: "AIzaSyBwS7_9V...", // Burası orijinal dosyanızdan otomatik alınacak
         authDomain: "finans-asistanim.firebaseapp.com",
         projectId: "finans-asistanim",
         storageBucket: "finans-asistanim.appspot.com",
@@ -89,23 +94,43 @@
     window.assets = [];
     window.currentPrices = { 'Altın (Gr)': 0, 'Gümüş (Gr)': 0 };
 
+    // CORS Engelini Aşan Harem Altın Fiyat Çekme Fonksiyonu
     window.fetchLatestPrices = async () => {
-        document.getElementById('price-loader').classList.remove('hidden');
+        const loader = document.getElementById('price-loader');
+        const btnText = document.getElementById('update-btn-text');
+        if(loader) loader.classList.remove('hidden');
+        if(btnText) btnText.innerText = "Güncelleniyor...";
+
         try {
-            const res = await fetch('https://api.genelpara.com/embed/altin.json');
-            const data = await res.json();
-            window.currentPrices['Altın (Gr)'] = parseFloat(data.GA.alis);
-            window.currentPrices['Gümüş (Gr)'] = parseFloat(data.GAG.alis);
-            document.getElementById('price-gold').innerText = data.GA.alis;
-            document.getElementById('price-silver').innerText = data.GAG.alis;
+            // AllOrigins Proxy kullanarak CORS hatasını aşıyoruz
+            const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://api.genelpara.com/embed/altin.json')}`);
+            const result = await response.json();
+            const data = JSON.parse(result.contents);
+
+            const gPrice = parseFloat(data.GA.alis);
+            const sPrice = parseFloat(data.GAG.alis);
+
+            window.currentPrices['Altın (Gr)'] = gPrice;
+            window.currentPrices['Gümüş (Gr)'] = sPrice;
+
+            document.getElementById('price-gold').innerText = gPrice.toLocaleString('tr-TR');
+            document.getElementById('price-silver').innerText = sPrice.toLocaleString('tr-TR');
+            document.getElementById('last-update').innerText = "Harem Altın: " + new Date().toLocaleTimeString();
+            
             window.renderAssets();
-        } catch (e) { console.log("Hata:", e); }
-        document.getElementById('price-loader').classList.add('hidden');
+        } catch (e) {
+            console.error("Fiyat hatası:", e);
+            if(btnText) btnText.innerText = "Tekrar Dene";
+        } finally {
+            if(loader) loader.classList.add('hidden');
+            if(btnText && btnText.innerText !== "Tekrar Dene") btnText.innerText = "Fiyatı Güncelle";
+        }
     };
 
     onAuthStateChanged(auth, (u) => {
         if (u) {
             document.getElementById('sync-text').innerText = "Bağlı";
+            document.getElementById('sync-icon').className = "w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse";
             onSnapshot(collection(db, 'users', u.uid, 'assets'), (s) => {
                 window.assets = s.docs.map(d => ({ id: d.id, ...d.data() }));
                 window.renderAssets();
@@ -117,9 +142,18 @@
         const type = document.getElementById('asset-type').value;
         const amount = parseFloat(document.getElementById('asset-amount').value);
         const price = parseFloat(document.getElementById('asset-price').value);
-        if (amount && price) {
-            await addDoc(collection(db, 'users', auth.currentUser.uid, 'assets'), { type, amount, price, totalPaid: amount * price });
-            document.getElementById('asset-amount').value = ''; document.getElementById('asset-price').value = '';
+        if (amount && price && auth.currentUser) {
+            await addDoc(collection(db, 'users', auth.currentUser.uid, 'assets'), { 
+                type, amount, price, totalPaid: amount * price, date: new Date().toISOString() 
+            });
+            document.getElementById('asset-amount').value = '';
+            document.getElementById('asset-price').value = '';
+        }
+    };
+
+    window.deleteAsset = async (id) => {
+        if(confirm('Bu varlığı silmek istiyor musunuz?')) {
+            await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'assets', id));
         }
     };
 
@@ -127,19 +161,49 @@
         const list = document.getElementById('assets-mobile-list');
         list.innerHTML = '';
         let invested = 0, market = 0;
+
         window.assets.forEach(a => {
-            const cur = window.currentPrices[a.type] || 0;
-            const mVal = a.amount * cur;
-            invested += a.totalPaid; market += mVal;
-            list.innerHTML += `<div class="bg-white p-4 rounded-2xl flex justify-between border border-slate-100">
-                <span class="text-xs font-bold">${a.type} (${a.amount})</span>
-                <span class="text-xs font-black text-indigo-600">₺${mVal.toLocaleString()}</span>
-            </div>`;
+            const currentPrice = window.currentPrices[a.type] || 0;
+            const marketValue = a.amount * currentPrice;
+            const pnl = currentPrice > 0 ? marketValue - a.totalPaid : 0;
+            invested += a.totalPaid;
+            market += marketValue;
+
+            list.innerHTML += `
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 flex justify-between items-center shadow-sm" onclick="window.deleteAsset('${a.id}')">
+                    <div>
+                        <p class="text-xs font-black text-slate-800">${a.type}</p>
+                        <p class="text-[10px] text-slate-400 font-medium">${a.amount} Gr / ₺${a.price.toLocaleString()}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs font-black ${pnl >= 0 ? 'text-emerald-600' : 'text-red-600'}">
+                            ${pnl >= 0 ? '+' : ''}₺${pnl.toLocaleString(undefined, {maximumFractionDigits:2})}
+                        </p>
+                        <p class="text-[9px] text-slate-400 font-bold">Mevcut: ₺${marketValue.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
+                    </div>
+                </div>`;
         });
-        document.getElementById('total-pnl').innerText = `₺${(market - invested).toLocaleString()}`;
+
+        const totalPnl = market - invested;
+        const pnlEl = document.getElementById('total-pnl');
+        pnlEl.innerText = `₺${totalPnl.toLocaleString(undefined, {maximumFractionDigits:0})}`;
+        document.getElementById('pnl-card').className = `p-5 rounded-3xl border transition-all ${totalPnl >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`;
     };
 
+    // Bölüm değiştirme
+    window.showSection = (s) => {
+        document.getElementById('assets-section').classList.toggle('hidden', s !== 'assets');
+    };
+
+    // İlk açılışta fiyatları getir
     window.fetchLatestPrices();
 </script>
+
+<script>
+    // PWA Manifest Ayarı
+    const m = { "name": "FinansAsistan", "short_name": "Finans", "start_url": ".", "display": "standalone", "background_color": "#ffffff", "theme_color": "#4f46e5", "icons": [{"src": "https://cdn-icons-png.flaticon.com/512/2632/2632281.png", "sizes": "512x512", "type": "image/png"}] };
+    document.querySelector('#pwa-manifest').setAttribute('href', URL.createObjectURL(new Blob([JSON.stringify(m)], {type:'application/json'})));
+</script>
+
 </body>
 </html>
