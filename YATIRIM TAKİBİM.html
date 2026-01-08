@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FinansAsistan">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2632/2632281.png">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/2632/2632281.png">
+    
+    <link rel="manifest" id="pwa-manifest">
+
+    <title>Finansal Danışmanım - Portföy & Bütçe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        .loader {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        ::-webkit-scrollbar { display: none; }
+        .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900 select-none">
+
+<div class="max-w-6xl mx-auto px-4 py-6 pb-24">
+    <header class="mb-6 flex flex-col gap-2">
+        <div class="flex justify-between items-start">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-900 leading-tight">Finansal Danışmanım</h1>
+                <p class="text-slate-500 text-[10px] font-medium">Altın, Gümüş ve Bütçe Takibi</p>
+            </div>
+            <div id="sync-status" class="flex items-center gap-1 text-[9px] font-black uppercase text-slate-400 bg-white px-2 py-1 rounded-full border border-slate-100 shadow-sm">
+                <span id="sync-text">Bağlanıyor</span>
+                <div id="sync-icon" class="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+            </div>
+        </div>
+        
+        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button onclick="showSection('assets')" id="btn-assets" class="whitespace-nowrap px-6 py-2.5 bg-indigo-600 text-white text-xs rounded-xl font-bold shadow-md transition-all">Varlıklarım</button>
+            <button onclick="showSection('budget')" id="btn-budget" class="whitespace-nowrap px-6 py-2.5 bg-white border border-slate-200 text-slate-600 text-xs rounded-xl font-bold transition-all">Bütçem</button>
+            <button onclick="fetchLatestPrices()" class="whitespace-nowrap px-6 py-2.5 bg-amber-500 text-white text-xs rounded-xl font-bold flex items-center gap-2 active:scale-95 ml-auto">
+                <span id="update-btn-text">Fiyatı Güncelle</span>
+                <span id="price-loader" class="loader hidden"></span>
+            </button>
+        </div>
+    </header>
+
+    <div id="assets-section" class="space-y-4">
+        <div class="grid grid-cols-1 gap-3">
+            <div class="p-4 rounded-3xl bg-white shadow-sm border border-slate-100 flex justify-between items-center">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Yatırılan Ana Para</p>
+                    <h2 id="total-invested" class="text-xl font-bold text-slate-800 tracking-tight">₺0</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-[9px] font-black text-indigo-400 uppercase tracking-widest">Güncel Piyasa</p>
+                    <h2 id="current-value" class="text-xl font-bold text-indigo-900 tracking-tight">₺0</h2>
+                </div>
+            </div>
+            
+            <div id="pnl-card" class="p-5 rounded-3xl bg-white shadow-sm border border-slate-100 transition-all duration-700">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Net Kar / Zarar</p>
+                <div class="flex items-baseline justify-between">
+                    <h2 id="total-pnl" class="text-3xl font-black text-slate-800 tracking-tighter">₺0</h2>
+                    <span id="pnl-percent" class="text-sm font-black text-slate-500">%0</span>
+                </div>
+                <div class="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center">
+                    <p id="last-update" class="text-[8px] text-slate-400 uppercase font-bold tracking-tighter">Fiyatlar: ---</p>
+                    <div class="flex gap-2">
+                        <span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">A: ₺<span id="price-gold">0</span></span>
+                        <span class="text-[9px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">G: ₺<span id="price-silver">0</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-indigo-950 p-5 rounded-3xl shadow-2xl border border-indigo-900">
+            <h3 class="text-white font-black text-xs uppercase tracking-widest mb-4 opacity-80 text-center">İşlem Kaydet</h3>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <select id="asset-type" class="w-full px-4 py-3.5 bg-indigo-900/40 border border-indigo-800 text-white rounded-2xl text-xs font-bold outline-none appearance-none">
+                    <option value="Altın (Gr)">Altın (Gr)</option>
+                    <option value="Gümüş (Gr)">Gümüş (Gr)</option>
+                </select>
+                <input type="number" id="asset-amount" placeholder="Miktar" class="w-full px-4 py-3.5 bg-indigo-900/40 border border-indigo-800 text-white rounded-2xl text-xs font-bold outline-none">
+            </div>
+            <div class="flex gap-3">
+                <input type="number" id="asset-price" placeholder="Maliyet (₺)" class="flex-1 px-4 py-3.5 bg-indigo-900/40 border border-indigo-800 text-white rounded-2xl text-xs font-bold outline-none">
+                <button onclick="addAsset()" class="bg-amber-500 text-white px-8 py-3.5 rounded-2xl font-black text-xs shadow-lg shadow-amber-950/20 active:scale-95 transition">EKLE</button>
+            </div>
+        </div>
+
+        <div class="space-y-2" id="assets-mobile-list"></div>
+    </div>
+
+    <div id="budget-section" class="hidden space-y-4">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+            <h2 class="text-lg font-black text-indigo-900 mb-4">Harcama Takibi</h2>
+            <div class="flex gap-2 mb-6">
+                <input type="text" id="expense-name" placeholder="Market, Kira..." class="flex-1 px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold outline-none">
+                <input type="number" id="expense-amount" placeholder="₺" class="w-24 px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold outline-none">
+                <button onclick="addExpense()" class="bg-indigo-600 text-white px-5 py-3.5 rounded-2xl font-black">+</button>
+            </div>
+            <ul id="expense-list" class="space-y-2"></ul>
+        </div>
+    </div>
+</div>
+
+<nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 px-8 py-4 flex justify-around safe-area-bottom z-50">
+    <button onclick="showSection('assets')" class="nav-icon flex flex-col items-center gap-1 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span class="text-[9px] font-black text-indigo-600 uppercase tracking-tighter">Varlıklarım</span>
+    </button>
+    <button onclick="showSection('budget')" class="nav-icon flex flex-col items-center gap-1 opacity-40 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+        <span class="text-[9px] font-black text-slate-500 uppercase tracking-tighter">Bütçem</span>
+    </button>
+</nav>
+
+<script>
+    // --- PWA KURULUM KODLARI ---
+    const manifest = {
+        "name": "Finansal Danışmanım",
+        "short_name": "FinansAsistan",
+        "start_url": ".",
+        "display": "standalone",
+        "background_color": "#f8fafc",
+        "theme_color": "#4f46e5",
+        "icons": [{
+            "src": "https://cdn-icons-png.flaticon.com/512/2632/2632281.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }]
+    };
+    const manifestStr = JSON.stringify(manifest);
+    const blob = new Blob([manifestStr], {type: 'application/json'});
+    const manifestURL = URL.createObjectURL(blob);
+    document.querySelector('#pwa-manifest').setAttribute('href', manifestURL);
+
+    // Service Worker Kaydı
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('data:text/javascript;base64,' + btoa('self.addEventListener("fetch", (e) => { e.respondWith(fetch(e.request)); });'));
+        });
+    }
+
+    // Bölüm değiştirme fonksiyonu
+    function showSection(section) {
+        document.getElementById('assets-section').classList.toggle('hidden', section !== 'assets');
+        document.getElementById('budget-section').classList.toggle('hidden', section !== 'budget');
+        
+        // Tab bar ikon parlaklıklarını ayarla
+        const icons = document.querySelectorAll('.nav-icon');
+        if(section === 'assets') {
+            icons[0].classList.remove('opacity-40');
+            icons[1].classList.add('opacity-40');
+        } else {
+            icons[0].classList.add('opacity-40');
+            icons[1].classList.remove('opacity-40');
+        }
+    }
+</script>
+
+<script type="module">
+    // Buraya dosyanızdaki orijinal import ve Firebase kodlarını olduğu gibi yapıştırın.
+    // (Gonderdiğiniz koddaki <script type="module"> kısmını buraya ekledim)
+    
+    // ... Orijinal Firebase ve Render kodların ...
+</script>
+
+</body>
+</html>
